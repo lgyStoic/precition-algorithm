@@ -9,11 +9,20 @@ import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
 
 public class PercolationStats {
-    private double[] xts;
-    private int ptrails;
+    private final double[] xts;
+    private final int ptrails;
+    private final double magicnumber;
+    private double xbar;
+    private double xdev;
 
     // perform independent trials on an n-by-n grid
     public PercolationStats(int n, int trials) {
+        if (n <= 0 || trials <= 0) {
+            throw new IllegalArgumentException();
+        }
+        xbar = 0;
+        xdev = 0;
+        magicnumber = 1.96;
         xts = new double[trials];
         ptrails = trials;
         for (int t = 0; t < trials; t++) {
@@ -40,22 +49,32 @@ public class PercolationStats {
 
     // sample mean of percolation threshold
     public double mean() {
-        return StdStats.mean(xts);
+        xbar = StdStats.mean(xts);
+        return xbar;
     }
 
     // sample standard deviation of percolation threshold
     public double stddev() {
-        return StdStats.stddev(xts);
+        xdev = StdStats.stddev(xts);
+        return xdev;
     }
 
     // low endpoint of 95% confidence interval
     public double confidenceLo() {
-        return mean() - 1.96 * stddev() / Math.sqrt(ptrails);
+        if (xbar == 0 || xdev == 0) {
+            mean();
+            stddev();
+        }
+        return xbar - magicnumber * xdev / Math.sqrt(ptrails);
     }
 
     // high endpoint of 95% confidence interval
     public double confidenceHi() {
-        return mean() + 1.96 * stddev() / Math.sqrt(ptrails);
+        if (xbar == 0 || xdev == 0) {
+            mean();
+            stddev();
+        }
+        return xbar + magicnumber * xdev / Math.sqrt(ptrails);
     }
 
     // test client (see below)
@@ -63,7 +82,6 @@ public class PercolationStats {
         int grid = Integer.parseInt(args[0]);
         int trail = Integer.parseInt(args[1]);
         // StdOut.println(grid);
-        // StdOut.println(trail);
         PercolationStats stats = new PercolationStats(grid, trail);
         StdOut.println("mean = " + stats.mean());
         StdOut.println("stddev = " + stats.stddev());
